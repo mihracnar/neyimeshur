@@ -1,0 +1,648 @@
+/* ===== ÜRÜN MARKER STİLLERİ ===== */
+/* SVG KATMANI - BAĞLANTI ÇİZGİLERİ */
+#connection-lines-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 900; /* Modal (1000) ve Header (999) ALTINDA */
+}
+
+#connection-lines-layer path.connection-curve {
+    fill: none;
+    stroke: #E30613;
+    stroke-width: 2;
+    opacity: 0.12;
+    transition: opacity 0.3s ease, stroke-width 0.3s ease;
+}
+
+#connection-lines-layer path.connection-curve.hover {
+    opacity: 0.5;
+    stroke-width: 3;
+}
+
+#connection-lines-layer path.connection-curve.active {
+    opacity: 0.8;
+    stroke-width: 4;
+    stroke: #E30613;
+}
+
+.custom-product-icon {
+    background: transparent !important;
+    border: none !important;
+}
+
+.product-marker {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #E30613;
+    background: white;
+    box-shadow: 0 4px 12px rgba(227, 6, 19, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: markerAppear 0.5s ease-out forwards;
+    opacity: 0;
+    transform: scale(0);
+}
+
+.product-marker:hover {
+    transform: scale(1.15);
+    box-shadow: 0 6px 20px rgba(227, 6, 19, 0.5);
+    border-width: 4px;
+    z-index: 1000 !important;
+}
+
+.product-marker img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-marker-noimage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    background: linear-gradient(135deg, #FFE5E5 0%, #FFCCCC 100%);
+}
+
+@keyframes markerAppear {
+    0% {
+        opacity: 0;
+        transform: scale(0) translateY(-20px);
+    }
+    60% {
+        transform: scale(1.1) translateY(0);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* ===== PRODUCT POPUP STİLLERİ ===== */
+.product-popup {
+    padding: 0;
+    text-align: center;
+    min-width: auto;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.product-popup strong {
+    color: #B30510;
+    font-size: 0.95em;
+    font-weight: 600;
+    display: block;
+    text-shadow: 
+        -1px -1px 0 #fff,
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff,
+        1px 1px 0 #fff,
+        0 0 3px #fff;
+    margin: 0;
+    padding: 0;
+}
+
+.product-popup .badge {
+    display: none;
+}
+
+/* ===== CITY TOOLTIP STİLLERİ ===== */
+.city-tooltip {
+    background: rgba(227, 6, 19, 0.95) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 8px 16px !important;
+    font-size: 1.1em !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.city-tooltip::before {
+    border-top-color: rgba(227, 6, 19, 0.95) !important;
+}
+
+/* ===== LEAFLET POPUP ÖZELLEŞTİRMESİ ===== */
+.leaflet-popup-content-wrapper {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+}
+
+.leaflet-popup-tip {
+    display: none !important;
+}
+
+.leaflet-popup-content {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* ===== MADDE 1: Mavi dikdörtgeni kaldır ===== */
+.leaflet-interactive:focus {
+    outline: none !important;
+}
+
+.leaflet-container {
+    outline: none !important;
+}
+
+.leaflet-zoom-box {
+    display: none !important;
+}
+
+/* ===== FİLTRE ALANLARI (MADDE 7 & 8) ===== */
+.search-wrapper {
+    position: relative;
+    width: 100%;
+    grid-column: 1 / 2;
+    min-width: 0;
+}
+
+/* Filtre grupları */
+.filter-group,
+.normal-filters,
+.store-filters {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    transition: opacity 0.3s ease;
+}
+
+/* Nereden alınır modu: Satış yeri filtreleri göster */
+body.where-to-buy-mode .normal-filters {
+    display: none !important;
+}
+
+body.where-to-buy-mode .store-filters {
+    display: grid !important;
+}
+
+.filters-wrapper {
+    display: flex;
+    gap: 10px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+/* Store filtreleri fade-in animasyonu */
+.store-filters {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #E30613;
+    color: white;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.clear-search-btn:hover {
+    background: #B30510;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.filter-select {
+    padding: 10px 15px;
+    border: 2px solid #E0E0E0;
+    border-radius: 25px;
+    font-size: 0.9em;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 140px;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #E30613;
+    box-shadow: 0 0 0 3px rgba(227, 6, 19, 0.1);
+}
+
+.filter-select:hover {
+    border-color: #E30613;
+}
+
+.apply-filter-btn,
+.reset-filter-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 25px;
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.apply-filter-btn {
+    background: #E30613;
+    color: white;
+}
+
+.apply-filter-btn:hover {
+    background: #B30510;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(227, 6, 19, 0.3);
+}
+
+.reset-filter-btn {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.reset-filter-btn:hover {
+    background: #e0e0e0;
+    transform: translateY(-2px);
+}
+
+.apply-filter-btn:active,
+.reset-filter-btn:active {
+    transform: translateY(0);
+}
+
+/* ===== KOMPAKT BADGE'LER (MADDE 2) ===== */
+.product-meta {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.badge {
+    background: var(--light-gray);
+    color: var(--text-gray);
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 500;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+.badge.city {
+    background: var(--primary-red);
+    color: white;
+}
+
+.badge.type {
+    background: var(--dark-gray);
+    color: white;
+}
+
+/* ===== ZOOM KONTROL STİLLERİ ===== */
+.leaflet-control-zoom {
+    border: none !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.leaflet-control-zoom a {
+    border-radius: 8px !important;
+    border: none !important;
+    color: #E30613 !important;
+    font-weight: bold !important;
+}
+
+.leaflet-control-zoom a:hover {
+    background: #FFE5E5 !important;
+    color: #E30613 !important;
+}
+
+/* ===== HARITA KONTEYNERİ GELİŞTİRMELERİ ===== */
+#map {
+    cursor: default;
+}
+
+.leaflet-interactive {
+    cursor: pointer !important;
+}
+
+.leaflet-interactive:hover {
+    stroke-width: 2;
+}
+
+/* ===== RESPONSİVE İYİLEŞTİRMELER ===== */
+@media (max-width: 968px) {
+    .search-container {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .search-wrapper {
+        width: 100%;
+    }
+    
+    .filters-wrapper {
+        width: 100%;
+    }
+    
+    .filter-select {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .action-buttons {
+        width: 100%;
+    }
+    
+    .apply-filter-btn,
+    .reset-filter-btn {
+        flex: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .product-marker {
+        width: 52px;
+        height: 52px;
+        border-width: 2px;
+    }
+    
+    .product-marker:hover {
+        transform: scale(1.1);
+    }
+    
+    .custom-product-icon {
+        width: 52px !important;
+        height: 52px !important;
+    }
+}
+
+/* ===== LOADING OVERLAY ===== */
+.map-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+}
+
+.map-loading-overlay .spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #FFE5E5;
+    border-top-color: #E30613;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ===== POPUP Z-INDEX FIX ===== */
+.leaflet-popup {
+    z-index: 1001 !important;
+}
+
+.leaflet-popup-pane {
+    z-index: 1001 !important;
+}
+
+/* ===== MARKER HOVER Z-INDEX ===== */
+.leaflet-marker-icon:hover {
+    z-index: 1000 !important;
+}
+
+/* ===== NEREDEN ALINIR BUTONU ===== */
+.where-to-buy-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #E30613 0%, #B30510 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(227, 6, 19, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.where-to-buy-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(227, 6, 19, 0.4);
+}
+
+.where-to-buy-btn:active {
+    transform: translateY(0);
+}
+
+/* ===== NEREDEN ALINIR MODU - LAYOUT DEĞİŞİKLİĞİ ===== */
+/* Normal mod: Sol harita geniş (2fr), Sağ panel dar (1fr) */
+.main-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+/* Nereden Alınır Modu: Sol panel orta (1fr), Sağ harita geniş (2fr) */
+body.where-to-buy-mode .main-content {
+    grid-template-columns: 1fr 2fr !important;
+}
+
+/* Sol harita tamamen kaybolur */
+body.where-to-buy-mode .map-container {
+    display: none !important;
+}
+
+/* Sağ panel yerinde kalır ama grid'de sol tarafa geçer */
+body.where-to-buy-mode .products-panel {
+    grid-column: 1 / 2;
+}
+
+/* Nereden Alınır Haritası Container'ı */
+.where-to-buy-container {
+    display: none;
+    position: relative;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    border: 1px solid #E0E0E0;
+    height: 552px;
+    min-height: 552px;
+    max-height: 552px;
+}
+
+body.where-to-buy-mode .where-to-buy-container {
+    display: block;
+}
+
+.where-map-wrapper {
+    width: 100%;
+    height: 100%;
+    min-height: 552px;
+    position: relative;
+    overflow: hidden;
+}
+
+#whereMap {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 552px !important;
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* Leaflet container için özel ayar */
+#whereMap .leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* ===== GERI DÖN BUTONU ===== */
+body.where-to-buy-mode .where-to-buy-btn {
+    background: #666;
+}
+
+body.where-to-buy-mode .where-to-buy-btn:hover {
+    background: #555;
+}
+
+/* ===== SATIŞ NOKTASI MARKER'LARI ===== */
+.store-marker {
+    background: white;
+    border: 3px solid #28a745;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: markerAppear 0.5s ease-out forwards;
+    opacity: 0;
+    transform: scale(0);
+}
+
+.store-marker:hover {
+    transform: scale(1.2);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    border-width: 4px;
+    z-index: 1000 !important;
+}
+
+/* Marker renkleri dinamik border-color ile ayarlanıyor */
+/* Yeşil: Başka ilde satış noktası */
+/* Kırmızı: Ürünün kendi ilinde satış noktası */
+
+/* ===== STORE POPUP STİLLERİ ===== */
+.store-popup {
+    min-width: 250px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.store-popup h3 {
+    color: #333;
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.store-popup p {
+    margin: 5px 0;
+    font-size: 0.9em;
+    color: #666;
+    line-height: 1.4;
+}
+
+.store-popup strong {
+    color: #333;
+    font-weight: 600;
+}
+
+.store-popup a {
+    color: #E30613;
+    text-decoration: none;
+}
+
+.store-popup a:hover {
+    text-decoration: underline;
+}
+
+.store-popup ul {
+    margin: 5px 0;
+    padding-left: 20px;
+}
+
+.store-popup .store-type {
+    display: inline-block;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    margin-top: 2px;
+    font-weight: 600;
+}
+
+/* ===== RESPONSIVE - NEREDEN ALINIR ===== */
+@media (max-width: 968px) {
+    body.where-to-buy-mode .main-content {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .where-to-buy-container {
+        height: 450px;
+    }
+}

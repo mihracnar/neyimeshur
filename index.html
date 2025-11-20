@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neyi Meşhur? | Her İlin Meşhur Ürünleri - 2,644 Coğrafi İşaretli Ürün Haritası</title>
+    <meta name="description" content="Türkiye'nin 81 ilinden 2,644 coğrafi işaretli ürün. Gaziantep baklavası, Hereke halısı, Maraş dondurması ve daha fazlası. Her ilin neyi meşhur olduğunu keşfedin!">
+    <meta name="keywords" content="neyi meşhur, coğrafi işaretli ürünler, yerel lezzetler, türkiye haritası, tescilli ürünler, gaziantep baklavası, maraş dondurması">
+    <meta name="author" content="Neyi Meşhur">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://neyimeshur.tr/">
+    <meta property="og:title" content="Neyi Meşhur? | Her İlin Meşhur Ürünleri">
+    <meta property="og:description" content="Türkiye'nin 81 ilinden 2,644 tescilli ürün. Hangi ilin neyi meşhur olduğunu keşfedin!">
+    <meta property="og:image" content="https://neyimeshur.tr/assets/images/og-image.jpg">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://neyimeshur.tr/">
+    <meta property="twitter:title" content="Neyi Meşhur? | Her İlin Meşhur Ürünleri">
+    <meta property="twitter:description" content="2,644 coğrafi işaretli ürünü harita üzerinde keşfedin!">
+    <meta property="twitter:image" content="https://neyimeshur.tr/assets/images/og-image.jpg">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+    <link rel="apple-touch-icon" href="assets/images/logo.png">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Ana CSS -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/map_enhancements.css">
+    
+    <!-- Google Analytics (sonra eklenecek) -->
+    <!-- Google AdSense (sonra eklenecek) -->
+</head>
+<body>
+    <!-- SVG KATMANI - Ürün-Satış Noktası Çizgileri -->
+    <svg id="connection-lines-layer"></svg>
+    
+    <!-- SABIT HEADER -->
+    <header id="mainHeader">
+        <div class="header-top">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <div class="logo-icon">
+                    </div>
+                    <div class="logo-text">
+                        <span class="logo-main">Neyi Meşhur?</span>
+                        <span class="logo-sub">Her İlin Meşhur Ürünleri</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="header-bottom">
+            <div class="search-container" id="searchContainer">
+                <!-- NORMAL MOD FİLTRELERİ -->
+                <div class="normal-filters" id="normalFilters">
+                    <div class="search-wrapper">
+                        <input type="text" class="search-input" id="searchInput" 
+                            placeholder="🔍 Ürün ara...">
+                        <button class="clear-search-btn" id="clearSearchBtn" onclick="clearSearch()" style="display: none;">
+                            ✕
+                        </button>
+                    </div>
+                    <div class="filters-wrapper">
+                        <select class="filter-select" id="provinceFilter">
+                            <option value="">Tüm İller</option>
+                        </select>
+                        <select class="filter-select" id="productTypeFilter">
+                            <option value="">Tüm Türler</option>
+                        </select>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="apply-filter-btn" onclick="applyFilters()">
+                            🔍 Uygula
+                        </button>
+                        <button class="reset-filter-btn" onclick="resetAllFilters()">
+                            🔄 İptal
+                        </button>
+                    </div>
+                </div>
+
+                <!-- NEREDEN ALINIR MODU FİLTRELERİ -->
+                <div class="store-filters" id="storeFilters" style="display: none;">
+                    <div class="search-wrapper">
+                        <input type="text" class="search-input" id="storeSearchInput" 
+                            placeholder="🔍 Satış yeri ara...">
+                        <button class="clear-search-btn" id="clearStoreSearchBtn" onclick="clearStoreSearch()" style="display: none;">
+                            ✕
+                        </button>
+                    </div>
+                    <div class="filters-wrapper">
+                        <select class="filter-select" id="storeProvinceFilter">
+                            <option value="">Tüm İller</option>
+                        </select>
+                        <select class="filter-select" id="storeTypeFilter">
+                            <option value="">Tüm Türler</option>
+                        </select>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="apply-filter-btn" onclick="applyStoreFilters()">
+                            🔍 Uygula
+                        </button>
+                        <button class="reset-filter-btn" onclick="resetStoreFilters()">
+                            🔄 İptal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="page-title">
+            <h1><span class="highlight">Neyi Meşhur?</span> Türkiye'nin Yerel Lezzetleri</h1>
+            <p class="page-subtitle">2,644 coğrafi işaretli ürünü keşfedin • Her ilin meşhur ürününü öğrenin</p>
+        </div>
+
+        <div class="main-content" id="mainContent">
+            <!-- SOL: Türkiye Haritası (Normal modda görünür) -->
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+
+            <!-- ORTA/SOL: Ürün Listesi (Her zaman görünür) -->
+            <div class="products-panel" id="productsPanel">
+                <!-- Nereden Alınır Butonu - SAĞ PANEL İÇİNDE -->
+                <button class="where-to-buy-btn" id="whereToBuyBtn" style="display: none;" onclick="toggleWhereToBuyMode()">
+                    📍 Nereden Alınır?
+                </button>
+                
+                <div class="panel-header" id="panelHeader">
+                    Tüm Ürünler <span class="product-count">(0 ürün)</span>
+                </div>
+                <div id="productsList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Veriler yükleniyor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SAĞ: Nereden Alınır Haritası (Sadece where-to-buy-mode'da görünür) -->
+            <div class="where-to-buy-container" id="whereToBuyContainer">
+                <div class="where-map-wrapper">
+                    <div id="whereMap"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>Neyi Meşhur?</h3>
+                <p>Türkiye'nin tüm coğrafi işaretli ürünlerini keşfedin. Her ilin meşhur ürününü öğrenin.</p>
+                <p style="margin-top: 15px; opacity: 0.7; font-size: 0.9em;">
+                    Veriler <a href="https://ci.turkpatent.gov.tr" target="_blank" style="color: #E30613;">Türk Patent ve Marka Kurumu</a> resmi kayıtlarından alınmıştır.
+                </p>
+            </div>
+            <div class="footer-section">
+                <h3>Sayfalar</h3>
+                <ul>
+                    <li><a href="sayfalar/hakkimizda.html">Hakkımızda</a></li>
+                    <li><a href="sayfalar/iletisim.html">İletişim</a></li>
+                    <li><a href="sayfalar/gizlilik-politikasi.html">Gizlilik Politikası</a></li>
+                    <li><a href="sayfalar/kullanim-sartlari.html">Kullanım Şartları</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 NeyiMeshur.tr - Tüm hakları saklıdır.</p>
+        </div>
+    </footer>
+
+    <!-- Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+                <div class="modal-title" id="modalTitle"></div>
+                <div id="modalBadges"></div>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Ana JavaScript -->
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

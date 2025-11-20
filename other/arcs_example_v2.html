@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nereden Alınır? - Yerel Gıda Haritası</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* TEMEL SAYFA VE YAPI STİLLERİ */
+        * { box-sizing: border-box; }
+        
+        html, body {
+            margin: 0; padding: 0; height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden; background-color: #f4f4f4;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #E30613 0%, #c90512 100%);
+            color: white; padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-between;
+            align-items: center; z-index: 1000;
+        }
+
+        .header h1 {
+            margin: 0; font-size: 1.5em;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .province-selector select {
+            padding: 8px 15px; border-radius: 8px;
+            border: 2px solid white; background: white;
+            color: #E30613; font-size: 1em;
+            cursor: pointer; font-weight: 600;
+        }
+
+        /* CONTAINER */
+        .container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            height: calc(100vh - 60px);
+            gap: 20px; padding: 20px;
+        }
+
+        /* HARİTA WRAPPER */
+        .map-wrapper {
+            position: relative;
+            border-radius: 15px; overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 1;
+        }
+
+        #map { width: 100%; height: 100%; }
+        
+        /* SAĞ PANEL */
+        .right-panel {
+            display: flex; flex-direction: column;
+            gap: 10px; overflow: hidden;
+        }
+
+        /* İSTATİSTİKLER */
+        .stats-panel {
+            background: white; border-radius: 15px;
+            padding: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            display: block; font-size: 1.8em;
+            font-weight: bold; color: #E30613;
+        }
+
+        .stat-label {
+            display: block; font-size: 0.75em;
+            color: #666; margin-top: 2px;
+        }
+
+        /* ARAMA VE FİLTRELER */
+        .filters-panel {
+            background: white; border-radius: 15px;
+            padding: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .search-box {
+            margin-bottom: 10px;
+        }
+
+        .search-box input {
+            width: 100%; padding: 8px 12px;
+            border: 2px solid #e0e0e0; border-radius: 8px;
+            font-size: 0.9em; transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none; border-color: #E30613;
+        }
+
+        .filter-section h3 {
+            margin: 0 0 8px 0; font-size: 0.85em;
+            color: #333; display: flex;
+            align-items: center; gap: 5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-section label {
+            display: flex; align-items: center;
+            padding: 4px 0; cursor: pointer;
+            transition: background 0.2s;
+            font-size: 0.85em;
+        }
+
+        .filter-section label:hover {
+            background: #f9f9f9;
+            padding-left: 3px;
+        }
+
+        .filter-section input[type="checkbox"] {
+            margin-right: 6px; width: 16px;
+            height: 16px; cursor: pointer;
+        }
+
+        /* ÜRÜNLER PANELİ */
+        .products-panel {
+            background: #fff; border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow-y: auto; flex: 1;
+            padding: 12px;
+        }
+
+        .products-panel h3 {
+            margin: 0 0 10px 0; color: #333;
+            position: sticky; top: 0; background: white;
+            padding-bottom: 8px; border-bottom: 2px solid #E30613;
+            font-size: 0.95em; z-index: 10;
+        }
+
+        .product-card {
+            border-left: 5px solid #E30613;
+            padding: 12px; margin-bottom: 10px;
+            border-radius: 8px; background-color: #fafafa;
+            border: 1px solid #eee; cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 6px 15px rgba(227, 6, 19, 0.15);
+        }
+
+        .product-card.active {
+            background: linear-gradient(to left, #fff5f5, #ffffff);
+            border-left-width: 8px;
+            box-shadow: 0 4px 12px rgba(227, 6, 19, 0.2);
+        }
+        
+        .product-card h4 {
+            margin: 0 0 5px 0; font-size: 1.05em;
+            color: #333; display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .category-badge {
+            font-size: 0.7em; padding: 3px 8px;
+            border-radius: 12px; background: #E30613;
+            color: white; font-weight: 600;
+        }
+
+        .product-card .location-count {
+            font-size: 0.8em; color: #666;
+            margin-top: 5px;
+        }
+
+        /* SVG KATMANI */
+        #link-layer {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none; z-index: 3;
+        }
+
+        path.curve {
+            fill: none; stroke: #E30613;
+            transition: opacity 0.3s ease, stroke-width 0.3s ease;
+        }
+
+        /* POPUP STİLLERİ */
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px; padding: 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .leaflet-popup-content {
+            margin: 0; width: 280px !important;
+        }
+
+        .location-popup {
+            padding: 15px;
+        }
+
+        .location-popup h4 {
+            margin: 0 0 10px 0; color: #E30613;
+            font-size: 1.1em; border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 8px;
+        }
+
+        .location-popup .info-row {
+            margin: 8px 0; font-size: 0.9em;
+            color: #666;
+        }
+
+        .location-popup .info-row strong {
+            color: #333; display: inline-block;
+            min-width: 60px;
+        }
+
+        .location-popup .products-list {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .location-popup .products-list h5 {
+            margin: 0 0 8px 0;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .location-popup .product-item {
+            padding: 4px 8px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            font-size: 0.85em;
+            margin: 3px 0;
+            border-left: 3px solid #E30613;
+        }
+
+        .location-popup .product-item.highlight {
+            background: #ffe0e0;
+            font-weight: 600;
+        }
+
+        /* MARKER HIGHLIGHT */
+        .marker-highlight {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        /* LEGEND */
+        .legend {
+            position: absolute; bottom: 20px;
+            right: 20px; background: white;
+            padding: 15px; border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000; font-size: 0.9em;
+        }
+
+        .legend h4 {
+            margin: 0 0 10px 0; font-size: 0.95em;
+        }
+
+        .legend-item {
+            display: flex; align-items: center;
+            margin: 5px 0; gap: 8px;
+        }
+
+        .legend-icon {
+            width: 20px; height: 20px;
+            border-radius: 50%; display: inline-block;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 60vh auto;
+            }
+
+            .products-panel {
+                max-height: 40vh;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.2em;
+            }
+
+            .legend {
+                display: none;
+            }
+        }
+
+        /* SCROLLBAR */
+        .products-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .products-panel::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .products-panel::-webkit-scrollbar-thumb {
+            background: #E30613;
+            border-radius: 10px;
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center; padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 3em; margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <div class="header">
+        <h1>
+            <span>🗺️</span>
+            Nereden Alınır?
+        </h1>
+        <div class="province-selector">
+            <select id="provinceSelect">
+                <option value="all">🇹🇷 Tüm Türkiye</option>
+                <option value="istanbul">İstanbul</option>
+                <option value="ankara">Ankara</option>
+                <option value="izmir">İzmir</option>
+                <option value="canakkale">Çanakkale</option>
+                <option value="bursa">Bursa</option>
+                <option value="antalya">Antalya</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="container">
+        <!-- HARİTA -->
+        <div class="map-wrapper" id="mapWrapper">
+            <div id="map"></div>
+            <!-- LEGEND -->
+            <div class="legend">
+                <h4>📍 Satış Noktası Tipleri</h4>
+                <div class="legend-item">
+                    <span class="legend-icon" style="background: #4CAF50; clip-path: polygon(50% 0%, 100% 100%, 0% 100%);"></span>
+                    <span>Üretici</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-icon" style="background: #E30613;"></span>
+                    <span>Kooperatif</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-icon" style="background: #FF9800; border-radius: 3px;"></span>
+                    <span>Pazar</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SAĞ PANEL -->
+        <div class="right-panel">
+            <!-- İSTATİSTİKLER -->
+            <div class="stats-panel">
+                <div class="stat-item">
+                    <span class="stat-number" id="statProducts">0</span>
+                    <span class="stat-label">Ürün</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="statLocations">0</span>
+                    <span class="stat-label">Satış Noktası</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="statCities">0</span>
+                    <span class="stat-label">Şehir</span>
+                </div>
+            </div>
+
+            <!-- FİLTRELER -->
+            <div class="filters-panel">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="🔍 Ürün ara...">
+                </div>
+                
+                <div class="filter-section">
+                    <h3>🏷️ Kategoriler</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                        <label>
+                            <input type="checkbox" class="category-filter" value="süt-ürünleri" checked>
+                            <span>Süt Ürünleri</span>
+                        </label>
+                        <label>
+                            <input type="checkbox" class="category-filter" value="sebze-meyve" checked>
+                            <span>Sebze & Meyve</span>
+                        </label>
+                        <label>
+                            <input type="checkbox" class="category-filter" value="tahıl" checked>
+                            <span>Tahıl</span>
+                        </label>
+                        <label>
+                            <input type="checkbox" class="category-filter" value="arıcılık" checked>
+                            <span>Arıcılık</span>
+                        </label>
+                        <label>
+                            <input type="checkbox" class="category-filter" value="zeytinyağı" checked>
+                            <span>Zeytinyağı</span>
+                        </label>
+                        <label>
+                            <input type="checkbox" class="category-filter" value="el-sanatları" checked>
+                            <span>El Sanatları</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ÜRÜNLER LİSTESİ -->
+            <div class="products-panel">
+                <h3 id="panelTitle">🛒 Tüm Ürünler</h3>
+                <div id="productsContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <svg id="link-layer"></svg>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // --- VERİ YAPISI: SATIŞ NOKTALARI ---
+        const locationsData = [
+            {
+                id: 'loc1', name: 'Kadıköy Gıda Kooperatifi', type: 'kooperatif',
+                city: 'İstanbul', district: 'Kadıköy', address: 'Moda Cad. No:45',
+                lat: 40.9877, lng: 29.0266,
+                products: ['Ezine Peyniri', 'Soğuk Sıkım Zeytinyağı', 'Organik Yumurta', 'Çam Balı']
+            },
+            {
+                id: 'loc2', name: 'Ezine Peynir Üreticileri', type: 'üretici',
+                city: 'Çanakkale', district: 'Ezine', address: 'Ezine Merkez',
+                lat: 39.7875, lng: 26.3431,
+                products: ['Ezine Peyniri', 'Organik Yoğurt']
+            },
+            {
+                id: 'loc3', name: 'Kızılay Organik Pazarı', type: 'pazar',
+                city: 'Ankara', district: 'Çankaya', address: 'Kızılay Meydanı, Her Cumartesi',
+                lat: 39.9234, lng: 32.8597,
+                products: ['Organik Domates', 'Tam Buğday Unu', 'Bulgur', 'Organik Zeytin']
+            },
+            {
+                id: 'loc4', name: 'Demre Organik Üreticiler', type: 'üretici',
+                city: 'Antalya', district: 'Demre', address: 'Demre Sera Bölgesi',
+                lat: 36.2469, lng: 29.9833,
+                products: ['Organik Domates', 'Organik Salatalık', 'Organik Biber']
+            },
+            {
+                id: 'loc5', name: 'Uludağ Arıcılar Kooperatifi', type: 'üretici',
+                city: 'Bursa', district: 'Uludağ', address: 'Uludağ Yolu',
+                lat: 40.0883, lng: 29.0609,
+                products: ['Kestane Balı', 'Çam Balı', 'Çiçek Balı']
+            },
+            {
+                id: 'loc6', name: 'Alsancak Gıda Kooperatifi', type: 'kooperatif',
+                city: 'İzmir', district: 'Konak', address: 'Alsancak, Kıbrıs Şehitleri Cad.',
+                lat: 38.4337, lng: 27.1428,
+                products: ['Kestane Balı', 'Soğuk Sıkım Zeytinyağı', 'Organik Zeytin']
+            },
+            {
+                id: 'loc7', name: 'Konya Ovası Tahıl Üreticileri', type: 'üretici',
+                city: 'Konya', district: 'Karatay', address: 'Konya Ovası',
+                lat: 37.8746, lng: 32.4932,
+                products: ['Tam Buğday Unu', 'Bulgur', 'Arpa']
+            },
+            {
+                id: 'loc8', name: 'Edremit Zeytin Kooperatifi', type: 'üretici',
+                city: 'Balıkesir', district: 'Edremit', address: 'Edremit Merkez',
+                lat: 39.5926, lng: 27.0253,
+                products: ['Soğuk Sıkım Zeytinyağı', 'Organik Zeytin', 'Zeytinyağlı Sabun']
+            },
+            {
+                id: 'loc9', name: 'Şişli Yerel Ürünler Kooperatifi', type: 'kooperatif',
+                city: 'İstanbul', district: 'Şişli', address: 'Osmanbey, Halaskargazi Cad.',
+                lat: 41.0582, lng: 28.9884,
+                products: ['Organik Yumurta', 'Kestane Balı', 'Tam Buğday Unu']
+            },
+            {
+                id: 'loc10', name: 'Malatya Kayısı Kooperatifi', type: 'üretici',
+                city: 'Malatya', district: 'Merkez', address: 'Kayısı Bahçeleri',
+                lat: 38.3552, lng: 38.3095,
+                products: ['Kurutulmuş Kayısı', 'Kayısı Reçeli']
+            },
+            {
+                id: 'loc11', name: 'Beşiktaş Cumartesi Pazarı', type: 'pazar',
+                city: 'İstanbul', district: 'Beşiktaş', address: 'Abbasağa Parkı, Her Cumartesi',
+                lat: 41.0420, lng: 29.0050,
+                products: ['Organik Domates', 'Organik Biber', 'Ezine Peyniri', 'Çam Balı', 'El Dokuması Kilim']
+            },
+            {
+                id: 'loc12', name: 'Bornova Organik Pazar', type: 'pazar',
+                city: 'İzmir', district: 'Bornova', address: 'Bornova Meydanı, Her Pazar',
+                lat: 38.4632, lng: 27.2137,
+                products: ['Organik Zeytin', 'Soğuk Sıkım Zeytinyağı', 'Organik Domates']
+            }
+        ];
+
+        // ÜRÜN KATEGORİLERİ
+        const productCategories = {
+            'Ezine Peyniri': 'süt-ürünleri',
+            'Organik Yoğurt': 'süt-ürünleri',
+            'Organik Yumurta': 'süt-ürünleri',
+            'Organik Domates': 'sebze-meyve',
+            'Organik Salatalık': 'sebze-meyve',
+            'Organik Biber': 'sebze-meyve',
+            'Organik Zeytin': 'sebze-meyve',
+            'Kurutulmuş Kayısı': 'sebze-meyve',
+            'Kayısı Reçeli': 'sebze-meyve',
+            'Tam Buğday Unu': 'tahıl',
+            'Bulgur': 'tahıl',
+            'Arpa': 'tahıl',
+            'Kestane Balı': 'arıcılık',
+            'Çam Balı': 'arıcılık',
+            'Çiçek Balı': 'arıcılık',
+            'Soğuk Sıkım Zeytinyağı': 'zeytinyağı',
+            'Zeytinyağlı Sabun': 'zeytinyağı',
+            'El Dokuması Kilim': 'el-sanatları'
+        };
+
+        // İL KOORDİNATLARI
+        const provinceCoords = {
+            'istanbul': { lat: 41.0082, lng: 28.9784, zoom: 10 },
+            'ankara': { lat: 39.9334, lng: 32.8597, zoom: 10 },
+            'izmir': { lat: 38.4192, lng: 27.1287, zoom: 10 },
+            'canakkale': { lat: 40.1553, lng: 26.4142, zoom: 9 },
+            'bursa': { lat: 40.1885, lng: 29.0609, zoom: 10 },
+            'antalya': { lat: 36.8969, lng: 30.7133, zoom: 10 }
+        };
+
+        // --- GLOBAL DEĞİŞKENLER ---
+        const map = L.map('map').setView([39.0, 35.0], 6);
+        const mapWrapper = document.getElementById('mapWrapper');
+        const productsContainer = document.getElementById('productsContainer');
+        const svgLayer = document.getElementById('link-layer');
+        const svgNS = "http://www.w3.org/2000/svg";
+        
+        const markers = {};
+        const linePaths = {};
+        const cardElements = {};
+        let activeProductName = null;
+        let allProducts = [];
+
+        const STYLES = {
+            default: { opacity: '0.3', strokeWidth: '1px' },
+            hover:   { opacity: '0.6', strokeWidth: '2px' },
+            active:  { opacity: '0.9', strokeWidth: '3px' }
+        };
+
+        // --- CUSTOM ICONS ---
+        const iconTypes = {
+            üretici: L.divIcon({
+                html: '<div style="width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-bottom:20px solid #4CAF50;"></div>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 24],
+                popupAnchor: [0, -24],
+                className: 'custom-icon'
+            }),
+            kooperatif: L.divIcon({
+                html: '<div style="width:20px;height:20px;background:#E30613;border-radius:50%;border:3px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10],
+                popupAnchor: [0, -10],
+                className: 'custom-icon'
+            }),
+            pazar: L.divIcon({
+                html: '<div style="width:18px;height:18px;background:#FF9800;border-radius:3px;border:3px solid white;box-shadow:0 2px 5px rgba(0,0,0,0.3);"></div>',
+                iconSize: [18, 18],
+                iconAnchor: [9, 9],
+                popupAnchor: [0, -9],
+                className: 'custom-icon'
+            })
+        };
+
+        // --- KURULUM ---
+        window.onload = () => {
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap contributors © CARTO'
+            }).addTo(map);
+
+            extractProducts();
+            initializeLocations();
+            renderProducts(allProducts);
+            setupEventListeners();
+            updateStats();
+            animationLoop();
+        };
+
+        // --- TÜM ÜRÜN LİSTESİNİ ÇIKART ---
+        function extractProducts() {
+            const productMap = new Map();
+            
+            locationsData.forEach(location => {
+                location.products.forEach(productName => {
+                    if (!productMap.has(productName)) {
+                        productMap.set(productName, {
+                            name: productName,
+                            category: productCategories[productName] || 'diğer',
+                            locations: []
+                        });
+                    }
+                    productMap.get(productName).locations.push(location.id);
+                });
+            });
+
+            allProducts = Array.from(productMap.values());
+        }
+
+        // --- SATIŞ NOKTALARI İNİSYALİZASYONU ---
+        function initializeLocations() {
+            locationsData.forEach(location => {
+                const marker = L.marker([location.lat, location.lng], {
+                    icon: iconTypes[location.type] || iconTypes.kooperatif
+                }).addTo(map);
+
+                const productsListHTML = location.products.map(p => 
+                    `<div class="product-item">${p}</div>`
+                ).join('');
+                
+                const popupContent = `
+                    <div class="location-popup">
+                        <h4>${location.name}</h4>
+                        <div class="info-row"><strong>Tip:</strong> ${getLocationTypeLabel(location.type)}</div>
+                        <div class="info-row"><strong>Şehir:</strong> ${location.city}, ${location.district}</div>
+                        <div class="info-row"><strong>Adres:</strong> ${location.address}</div>
+                        <div class="products-list">
+                            <h5>🛒 Satılan Ürünler:</h5>
+                            ${productsListHTML}
+                        </div>
+                    </div>
+                `;
+                marker.bindPopup(popupContent);
+
+                marker.on('click', () => {
+                    highlightMarker(location.id);
+                });
+
+                markers[location.id] = marker;
+            });
+        }
+
+        // --- ÜRÜN KARTLARINI RENDER ET ---
+        function renderProducts(products) {
+            productsContainer.innerHTML = '';
+            
+            if (products.length === 0) {
+                productsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <p>Arama kriterlerine uygun ürün bulunamadı</p>
+                    </div>
+                `;
+                return;
+            }
+
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.dataset.name = product.name;
+                
+                // Her ürün için çizgi oluştur
+                product.locations.forEach(locationId => {
+                    const path = document.createElementNS(svgNS, 'path');
+                    path.setAttribute('class', 'curve');
+                    path.dataset.product = product.name;
+                    path.dataset.location = locationId;
+                    applyStyles(path, STYLES.default);
+                    svgLayer.appendChild(path);
+                    
+                    if (!linePaths[product.name]) {
+                        linePaths[product.name] = [];
+                    }
+                    linePaths[product.name].push(path);
+                });
+                
+                card.innerHTML = `
+                    <h4>
+                        ${product.name}
+                        <span class="category-badge">${getCategoryLabel(product.category)}</span>
+                    </h4>
+                    <div class="location-count">📍 ${product.locations.length} satış noktası</div>
+                `;
+                
+                productsContainer.appendChild(card);
+                cardElements[product.name] = card;
+            });
+        }
+
+        // --- EVENT LISTENERS ---
+        function setupEventListeners() {
+            // Kart tıklama
+            productsContainer.addEventListener('click', (e) => {
+                const card = e.target.closest('.product-card');
+                if (card) {
+                    const productName = card.dataset.name;
+                    setActiveProduct(productName === activeProductName ? null : productName);
+                }
+            });
+
+            // Kart hover
+            productsContainer.addEventListener('mouseover', (e) => {
+                const card = e.target.closest('.product-card');
+                if (card && card.dataset.name !== activeProductName) {
+                    const productName = card.dataset.name;
+                    if (linePaths[productName]) {
+                        linePaths[productName].forEach(path => applyStyles(path, STYLES.hover));
+                    }
+                }
+            });
+
+            productsContainer.addEventListener('mouseout', () => {
+                updateAllLineStyles();
+            });
+
+            // Harita tıklama
+            map.on('click', () => {
+                if (activeProductName !== null) {
+                    setActiveProduct(null);
+                }
+            });
+
+            // Arama
+            document.getElementById('searchInput').addEventListener('input', filterProducts);
+
+            // Kategori filtreleri
+            document.querySelectorAll('.category-filter').forEach(checkbox => {
+                checkbox.addEventListener('change', filterProducts);
+            });
+
+            // İl seçici
+            document.getElementById('provinceSelect').addEventListener('change', (e) => {
+                const province = e.target.value;
+                if (province === 'all') {
+                    map.setView([39.0, 35.0], 6);
+                } else if (provinceCoords[province]) {
+                    const coords = provinceCoords[province];
+                    map.setView([coords.lat, coords.lng], coords.zoom);
+                }
+            });
+        }
+
+        // --- AKTİF ÜRÜNÜ AYARLA ---
+        function setActiveProduct(productName) {
+            activeProductName = productName;
+            
+            // Kart görünümlerini güncelle
+            Object.keys(cardElements).forEach(name => {
+                if (cardElements[name]) {
+                    cardElements[name].classList.toggle('active', name === productName);
+                }
+            });
+
+            // Çizgi stillerini güncelle
+            updateAllLineStyles();
+
+            // Marker'ları vurgula/kaldır
+            if (productName) {
+                const product = allProducts.find(p => p.name === productName);
+                if (product) {
+                    // O ürünü satan yerleri vurgula
+                    const bounds = [];
+                    product.locations.forEach(locId => {
+                        if (markers[locId]) {
+                            const marker = markers[locId];
+                            bounds.push(marker.getLatLng());
+                        }
+                    });
+                    
+                    if (bounds.length > 0) {
+                        map.fitBounds(L.latLngBounds(bounds), { padding: [50, 50] });
+                    }
+                }
+            } else {
+                // Aktif ürün yoksa Türkiye geneline zoom out
+                map.setView([39.0, 35.0], 6, { animate: true, duration: 1 });
+            }
+        }
+
+        // --- MARKER VURGULAMA ---
+        function highlightMarker(locationId) {
+            // Bu lokasyonda satılan ürünleri bul
+            const location = locationsData.find(l => l.id === locationId);
+            if (location && location.products.length > 0) {
+                // İlk ürünü aktif yap
+                setActiveProduct(location.products[0]);
+            }
+        }
+
+        // --- FİLTRELEME ---
+        function filterProducts() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const selectedCategories = Array.from(
+                document.querySelectorAll('.category-filter:checked')
+            ).map(cb => cb.value);
+
+            const filteredProducts = allProducts.filter(product => {
+                const matchesSearch = !searchQuery || 
+                    product.name.toLowerCase().includes(searchQuery);
+                const matchesCategory = selectedCategories.includes(product.category);
+
+                return matchesSearch && matchesCategory;
+            });
+
+            // Eski çizgileri temizle
+            svgLayer.innerHTML = '';
+            linePaths = {};
+
+            renderProducts(filteredProducts);
+            updateStats();
+            updatePanelTitle();
+        }
+
+        // --- PANEL BAŞLIĞINI GÜNCELLE ---
+        function updatePanelTitle() {
+            const visibleProducts = document.querySelectorAll('.product-card').length;
+            document.getElementById('panelTitle').textContent = `🛒 ${visibleProducts} Ürün`;
+        }
+
+        // --- İSTATİSTİKLERİ GÜNCELLE ---
+        function updateStats() {
+            const visibleProducts = document.querySelectorAll('.product-card').length;
+            const uniqueCities = new Set(locationsData.map(l => l.city)).size;
+
+            document.getElementById('statProducts').textContent = visibleProducts;
+            document.getElementById('statLocations').textContent = locationsData.length;
+            document.getElementById('statCities').textContent = uniqueCities;
+        }
+
+        // --- ÇİZGİ STİLLERİNİ GÜNCELLE ---
+        function applyStyles(path, style) {
+            path.style.opacity = style.opacity;
+            path.style.strokeWidth = style.strokeWidth;
+        }
+
+        function updateAllLineStyles() {
+            document.querySelectorAll('path.curve').forEach(path => {
+                const productName = path.dataset.product;
+                const styleToApply = (productName === activeProductName) ? STYLES.active : STYLES.default;
+                applyStyles(path, styleToApply);
+            });
+        }
+
+        // --- ANİMASYON DÖNGÜSÜ ---
+        function animationLoop() {
+            updateAllLines();
+            requestAnimationFrame(animationLoop);
+        }
+
+        function updateAllLines() {
+            const mapRect = mapWrapper.getBoundingClientRect();
+            
+            document.querySelectorAll('path.curve').forEach(path => {
+                const productName = path.dataset.product;
+                const locationId = path.dataset.location;
+                
+                const card = cardElements[productName];
+                const marker = markers[locationId];
+                
+                if (!card || !marker || !map.hasLayer(marker)) {
+                    path.style.display = 'none';
+                    return;
+                }
+                
+                path.style.display = 'block';
+                
+                const cardRect = card.getBoundingClientRect();
+                const startX = cardRect.left;
+                const startY = cardRect.top + (cardRect.height / 2);
+                
+                const endPointInMap = map.latLngToContainerPoint(marker.getLatLng());
+                const endX = endPointInMap.x + mapRect.left;
+                const endY = endPointInMap.y + mapRect.top;
+                
+                const control1X = startX + (endX - startX) * 0.3;
+                const control1Y = startY;
+                const control2X = startX + (endX - startX) * 0.7;
+                const control2Y = endY;
+                
+                const d = `M${startX},${startY} C${control1X},${control1Y} ${control2X},${control2Y} ${endX},${endY}`;
+                path.setAttribute('d', d);
+            });
+        }
+
+        // --- YARDIMCI FONKSİYONLAR ---
+        function getCategoryLabel(category) {
+            const labels = {
+                'süt-ürünleri': 'Süt',
+                'sebze-meyve': 'Sebze',
+                'tahıl': 'Tahıl',
+                'arıcılık': 'Bal',
+                'zeytinyağı': 'Zeytin',
+                'el-sanatları': 'El Sanatı'
+            };
+            return labels[category] || category;
+        }
+
+        function getLocationTypeLabel(type) {
+            const labels = {
+                'üretici': '🚜 Üretici',
+                'kooperatif': '🏢 Kooperatif',
+                'pazar': '🏪 Pazar'
+            };
+            return labels[type] || type;
+        }
+    </script>
+</body>
+</html>

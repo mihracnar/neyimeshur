@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İnce Varsayılan Çizgilerle Prototip</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* TEMEL SAYFA VE YAPI STİLLERİ */
+        html, body {
+            margin: 0; padding: 0; height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden; background-color: #f4f4f4;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            height: 100vh; gap: 20px; padding: 20px; box-sizing: border-box;
+        }
+
+        /* HARİTA WRAPPER */
+        .map-wrapper {
+            position: relative;
+            border-radius: 15px; overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 1;
+        }
+
+        #map { width: 100%; height: 100%; }
+        
+        /* SAĞ PANEL (KAYDIRILABİLİR) */
+        .products-panel {
+            background: #fff; border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            height: calc(100vh - 40px);
+            z-index: 2;
+            position: relative;
+        }
+        
+        .panel-padding { padding: 10px; }
+
+        .product-card {
+            border-left: 5px solid #E30613; padding: 15px; margin: 10px;
+            border-radius: 8px; background-color: #fafafa; border: 1px solid #eee;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 6px 15px rgba(227, 6, 19, 0.1);
+        }
+        
+        .product-card h3 { margin: 0 0 5px 0; font-size: 1.1em; color: #333; }
+        .product-card p { margin: 0; font-size: 0.9em; color: #777; }
+
+        /* SVG KATMANI */
+        #link-layer {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        /* ÇİZGİ STİLLERİ */
+        path.curve {
+            fill: none; stroke: black;
+            /* Stil artık JavaScript ile yönetildiği için burası daha genel kalabilir */
+            transition: opacity 0.3s ease, stroke-width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="map-wrapper" id="mapWrapper">
+            <div id="map"></div>
+        </div>
+        <div class="products-panel" id="productsPanel">
+            <div class="panel-padding">
+                 <!-- Ürün kartları buraya dinamik olarak eklenecek -->
+            </div>
+        </div>
+    </div>
+    <svg id="link-layer"></svg>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // --- VERİ VE DEĞİŞKENLER ---
+        const productsData = [ { id: 'p1', name: 'Gaziantep Baklavası', city: 'Gaziantep', locations: [{ lat: 37.06, lng: 37.37 }, { lat: 41.00, lng: 28.97 }] }, { id: 'p2', name: 'Maraş Dondurması', city: 'Kahramanmaraş', locations: [{ lat: 37.57, lng: 36.92 }, { lat: 39.93, lng: 32.85 }, { lat: 38.42, lng: 27.14 }] }, { id: 'p3', name: 'Hereke Halısı', city: 'Kocaeli', locations: [{ lat: 40.76, lng: 29.62 }] }, { id: 'p4', name: 'Afyon Sucuğu', city: 'Afyonkarahisar', locations: [{ lat: 38.75, lng: 30.53 }] }, { id: 'p5', name: 'Kayseri Pastırması', city: 'Kayseri', locations: [{ lat: 38.72, lng: 35.48 }] }, { id: 'p6', name: 'Malatya Kayısısı', city: 'Malatya', locations: [{ lat: 38.35, lng: 38.30 }] }, { id: 'p7', name: 'Rize Çayı', city: 'Rize', locations: [{ lat: 41.02, lng: 40.52 }] }, { id: 'p8', name: 'Edremit Zeytinyağı', city: 'Balıkesir', locations: [{ lat: 39.59, lng: 27.02 }] }, { id: 'p9', name: 'Aydın İnciri', city: 'Aydın', locations: [{ lat: 37.83, lng: 27.84 }] }, { id: 'p10', name: 'Oltu Taşı', city: 'Erzurum', locations: [{ lat: 40.54, lng: 42.00 }] }, { id: 'p11', name: 'İzmir Boyozu', city: 'İzmir', locations: [{ lat: 38.4237, lng: 27.1428 }] }, { id: 'p12', name: 'Bursa Kestane Şekeri', city: 'Bursa', locations: [{ lat: 40.1885, lng: 29.0609 }] }, { id: 'p13', name: 'Ankara Simidi', city: 'Ankara', locations: [{ lat: 39.9334, lng: 32.8597 }] }, { id: 'p14', name: 'Adana Kebabı', city: 'Adana', locations: [{ lat: 37.0000, lng: 35.3213 }] }, { id: 'p15', name: 'Antalya Piyazı', city: 'Antalya', locations: [{ lat: 36.8969, lng: 30.7133 }] }, { id: 'p16', name: 'Diyarbakır Karpuzu', city: 'Diyarbakır', locations: [{ lat: 37.9142, lng: 40.2306 }] }];
+        
+        const map = L.map('map').setView([39.0, 35.0], 6);
+        const mapWrapper = document.getElementById('mapWrapper');
+        const productsPanel = document.getElementById('productsPanel').querySelector('.panel-padding');
+        const svgLayer = document.getElementById('link-layer');
+        const svgNS = "http://www.w3.org/2000/svg";
+        const markers = {};
+        const linePaths = {};
+        const cardElements = {};
+        
+        let activeCardId = null;
+        
+        // ===== DEĞİŞİKLİK BURADA =====
+        const STYLES = {
+            default: { opacity: '0.4', strokeWidth: '0.75px' }, // Çok daha ince ve soluk
+            hover:   { opacity: '0.7', strokeWidth: '2.0px' },
+            active:  { opacity: '0.9', strokeWidth: '2.5px' }
+        };
+        // ============================
+
+        // --- KURULUM ---
+        window.onload = () => {
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            productsData.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.dataset.id = product.id;
+                card.innerHTML = `<h3>${product.name}</h3><p>${product.city}</p>`;
+                productsPanel.appendChild(card);
+                
+                cardElements[product.id] = card;
+                markers[product.id] = product.locations.map(loc => L.marker([loc.lat, loc.lng]).addTo(map));
+                linePaths[product.id] = product.locations.map(() => {
+                    const path = document.createElementNS(svgNS, 'path');
+                    path.setAttribute('class', 'curve');
+                    // Başlangıç stilini uygula
+                    applyStyles(path, STYLES.default);
+                    svgLayer.appendChild(path);
+                    return path;
+                });
+            });
+            
+            setupInteractivity();
+            animationLoop();
+        };
+
+        // --- ANİMASYON VE GÜNCELLEME ---
+        function animationLoop() {
+            updateAllLines();
+            requestAnimationFrame(animationLoop);
+        }
+
+        function updateAllLines() {
+            const mapRect = mapWrapper.getBoundingClientRect();
+            productsData.forEach(product => {
+                const card = cardElements[product.id];
+                if (!card) return;
+                const cardRect = card.getBoundingClientRect();
+                const startX = cardRect.left;
+                const startY = cardRect.top + (cardRect.height / 2);
+
+                markers[product.id].forEach((marker, index) => {
+                    const endPointInMap = map.latLngToContainerPoint(marker.getLatLng());
+                    const endX = endPointInMap.x + mapRect.left;
+                    const endY = endPointInMap.y + mapRect.top;
+                    const control1X = (startX + endX) / 2;
+                    const control1Y = startY;
+                    const control2X = (startX + endX) / 2;
+                    const control2Y = endY;
+                    const d = `M${startX},${startY} C${control1X},${control1Y} ${control2X},${control2Y} ${endX},${endY}`;
+                    linePaths[product.id][index].setAttribute('d', d);
+                });
+            });
+        }
+        
+        // --- ETKİLEŞİM MANTIĞI ---
+        function applyStyles(path, style) {
+            path.style.opacity = style.opacity;
+            path.style.strokeWidth = style.strokeWidth;
+        }
+
+        function updateLineStyles() {
+            for (const id in linePaths) {
+                const styleToApply = (id === activeCardId) ? STYLES.active : STYLES.default;
+                linePaths[id].forEach(path => applyStyles(path, styleToApply));
+            }
+        }
+
+        function setupInteractivity() {
+            document.querySelectorAll('.product-card').forEach(card => {
+                const cardId = card.dataset.id;
+                card.addEventListener('click', function() {
+                    activeCardId = (activeCardId === cardId) ? null : cardId;
+                    updateLineStyles();
+                });
+                card.addEventListener('mouseover', function() {
+                    if (cardId !== activeCardId) {
+                        linePaths[cardId].forEach(path => applyStyles(path, STYLES.hover));
+                    }
+                });
+                card.addEventListener('mouseout', function() {
+                    updateLineStyles();
+                });
+            });
+
+            map.on('click', () => {
+                if (activeCardId !== null) {
+                    activeCardId = null;
+                    updateLineStyles();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
