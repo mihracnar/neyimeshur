@@ -452,36 +452,6 @@ body.where-to-buy-mode .store-filters {
 .leaflet-marker-icon:hover {
     z-index: 1000 !important;
 }
-
-/* ===== NEREDEN ALINIR BUTONU ===== */
-.where-to-buy-btn {
-    width: 100%;
-    padding: 15px;
-    background: linear-gradient(135deg, #E30613 0%, #B30510 100%);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 1.1em;
-    font-weight: 600;
-    cursor: pointer;
-    margin-bottom: 15px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(227, 6, 19, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.where-to-buy-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(227, 6, 19, 0.4);
-}
-
-.where-to-buy-btn:active {
-    transform: translateY(0);
-}
-
 /* ===== NEREDEN ALINIR MODU - LAYOUT DEĞİŞİKLİĞİ ===== */
 /* Normal mod: Sol harita geniş (2fr), Sağ panel dar (1fr) */
 .main-content {
@@ -547,16 +517,6 @@ body.where-to-buy-mode .where-to-buy-container {
     width: 100% !important;
     height: 100% !important;
 }
-
-/* ===== GERI DÖN BUTONU ===== */
-body.where-to-buy-mode .where-to-buy-btn {
-    background: #666;
-}
-
-body.where-to-buy-mode .where-to-buy-btn:hover {
-    background: #555;
-}
-
 /* ===== SATIŞ NOKTASI MARKER'LARI ===== */
 .store-marker {
     background: white;

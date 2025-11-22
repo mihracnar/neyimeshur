@@ -37,6 +37,22 @@
     <!-- Google AdSense (sonra eklenecek) -->
 </head>
 <body>
+    <!-- YENİ BUTONLAR - SABİT KONUMLU -->
+    <a href="#" class="play-button left" id="productsBtn" onclick="showProductsMode(event)">
+        <div class="text-container">
+            <span>Ürünleri</span>
+            <span>Keşfet</span>
+        </div>
+        <div class="question-mark">?</div>
+    </a>
+    <a href="#" class="play-button right" id="whereToBuyBtnNew" onclick="toggleWhereToBuyMode(event)">
+        <div class="text-container">
+            <span>Nereden</span>
+            <span>Alınır</span>
+        </div>
+        <div class="question-mark">?</div>
+    </a>
+
     <!-- SVG KATMANI - Ürün-Satış Noktası Çizgileri -->
     <svg id="connection-lines-layer"></svg>
     
@@ -127,11 +143,6 @@
 
             <!-- ORTA/SOL: Ürün Listesi (Her zaman görünür) -->
             <div class="products-panel" id="productsPanel">
-                <!-- Nereden Alınır Butonu - SAĞ PANEL İÇİNDE -->
-                <button class="where-to-buy-btn" id="whereToBuyBtn" style="display: none;" onclick="toggleWhereToBuyMode()">
-                    📍 Nereden Alınır?
-                </button>
-                
                 <div class="panel-header" id="panelHeader">
                     Tüm Ürünler <span class="product-count">(0 ürün)</span>
                 </div>

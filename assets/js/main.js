@@ -48,13 +48,24 @@ let selectedStoreProvince = '';
 let selectedStoreType = '';
 
 function updateWhereToBuyButtonVisibility() {
-    const whereToBuyBtn = document.getElementById('whereToBuyBtn');
-    if (!whereToBuyBtn) return;
+    const whereToBuyBtn = document.getElementById('whereToBuyBtnNew');
+    console.log('🔍 updateWhereToBuyButtonVisibility çağrıldı:', {
+        butonVar: !!whereToBuyBtn,
+        selectedProvince,
+        classList: whereToBuyBtn?.classList.toString()
+    });
+    
+    if (!whereToBuyBtn) {
+        console.error('❌ whereToBuyBtnNew butonu bulunamadı!');
+        return;
+    }
     
     if (selectedProvince && selectedProvince !== '') {
-        whereToBuyBtn.style.display = 'flex';
+        whereToBuyBtn.classList.add('visible');
+        console.log('✅ visible class eklendi, yeni classList:', whereToBuyBtn.classList.toString());
     } else {
-        whereToBuyBtn.style.display = 'none';
+        whereToBuyBtn.classList.remove('visible');
+        console.log('❌ visible class kaldırıldı');
         if (whereToBuyMode) {
             exitWhereToBuyMode();
         }
@@ -281,9 +292,9 @@ function zoomToCity(cityName, layer) {
     }
     
     // "Nereden Alınır?" butonunu göster
-    const whereToBuyBtn = document.getElementById('whereToBuyBtn');
+    const whereToBuyBtn = document.getElementById('whereToBuyBtnNew');
     if (whereToBuyBtn) {
-        whereToBuyBtn.style.display = 'flex';
+        whereToBuyBtn.classList.add('visible');
     }
     
     if (geoJsonLayer) {
@@ -295,7 +306,8 @@ function zoomToCity(cityName, layer) {
     map.fitBounds(layer.getBounds(), {
         padding: [20, 20],
         animate: true,
-        duration: 0.8
+        duration: 0.8,
+        maxZoom: 12
     });
     
     setTimeout(() => {
@@ -625,9 +637,21 @@ function applyFilters() {
         currentSearchTerm = document.getElementById('searchInput')?.value.toLowerCase().trim() || '';
         
         // "Nereden Alınır?" butonunu göster/gizle
-        const whereToBuyBtn = document.getElementById('whereToBuyBtn');
+        const whereToBuyBtn = document.getElementById('whereToBuyBtnNew');
+        console.log('🔍 Buton kontrolü:', {
+            butonVar: !!whereToBuyBtn,
+            selectedProvince,
+            classList: whereToBuyBtn?.classList.toString()
+        });
+        
         if (whereToBuyBtn) {
-            whereToBuyBtn.style.display = selectedProvince ? 'flex' : 'none';
+            if (selectedProvince) {
+                whereToBuyBtn.classList.add('visible');
+                console.log('✅ Sağ buton visible class eklendi');
+            } else {
+                whereToBuyBtn.classList.remove('visible');
+                console.log('❌ Sağ buton visible class kaldırıldı');
+            }
         }
         
         // SORUN 2: shuffledProducts'tan filtrele, tekrar shuffle etme
@@ -1069,7 +1093,9 @@ document.addEventListener('keydown', (e) => {
 // NEREDEN ALINIR? MODU FONKSİYONLARI
 // ========================================
 
-function toggleWhereToBuyMode() {
+function toggleWhereToBuyMode(event) {
+    if (event) event.preventDefault();
+    
     if (!whereToBuyMode) {
         enterWhereToBuyMode();
     } else {
@@ -1077,24 +1103,64 @@ function toggleWhereToBuyMode() {
     }
 }
 
+function showProductsMode(event) {
+    if (event) event.preventDefault();
+    
+    // Eğer where-to-buy modundaysak çık
+    if (whereToBuyMode) {
+        exitWhereToBuyMode();
+    }
+    
+    // NOT: Filtreleri SIFIRLAMIYORUZ - kullanıcının seçimi korunsun
+    // resetAllFilters(); // KALDIRILDI
+}
+
 function enterWhereToBuyMode() {
+    // Önce filteredProducts kontrolü yap (selectedProductsSnapshot henüz set edilmemiş olabilir)
+    if (!filteredProducts || filteredProducts.length === 0) {
+        alert('Lütfen önce bir il seçin.');
+        console.error('❌ filteredProducts boş');
+        return;
+    }
+    
+    console.log('✅ Kontrol geçti, filteredProducts:', filteredProducts.length);
+    
+    // Seçili ürünleri snapshot'a kaydet
+    selectedProductsSnapshot = [...filteredProducts];
+    
+    // Seçili ürünlerin illerini al
+    const selectedCities = [...new Set(selectedProductsSnapshot.map(p => p.city))];
+    console.log('🏙️ Seçili iller:', selectedCities);
+    
+    // stores.json'dan kontrol et
+    let hasStores = false;
+    if (storesData && storesData.length > 0) {
+        const matchingStores = storesData.filter(store => {
+            return selectedCities.includes(store.city);
+        });
+        hasStores = matchingStores.length > 0;
+        console.log('🏪 Bulunan satış noktası sayısı:', matchingStores.length);
+    } else {
+        console.warn('⚠️ storesData yüklenmemiş veya boş');
+    }
+    
+    // Eğer satış noktası yoksa kullanıcıyı bilgilendir ve işlemi durdur
+    if (!hasStores) {
+        alert('Seçili ürünler için henüz satış noktası bilgisi bulunmamaktadır.');
+        console.log('❌ Satış noktası bulunamadı. Seçili iller:', selectedCities);
+        return;
+    }
+    
+    console.log('✅ Satış noktası bulundu, moda geçiliyor...');
+    
     whereToBuyMode = true;
     document.body.classList.add('where-to-buy-mode');
-    
-    // Mevcut seçili ürünleri kaydet
-    selectedProductsSnapshot = [...filteredProducts];
     
     // Filtreleri değiştir
     const normalFilters = document.getElementById('normalFilters');
     const storeFilters = document.getElementById('storeFilters');
     if (normalFilters) normalFilters.style.display = 'none';
     if (storeFilters) storeFilters.style.display = 'grid';
-    
-    // Buton metnini değiştir
-    const btn = document.getElementById('whereToBuyBtn');
-    if (btn) {
-        btn.innerHTML = '← Ürünlere Dön';
-    }
     
     // Haritayı başlat (eğer yoksa)
     if (!whereMap) {
@@ -1184,12 +1250,6 @@ function exitWhereToBuyMode() {
     if (normalFilters) normalFilters.style.display = 'grid';
     if (storeFilters) storeFilters.style.display = 'none';
     
-    // Buton metnini geri al
-    const btn = document.getElementById('whereToBuyBtn');
-    if (btn) {
-        btn.innerHTML = '📍 Nereden Alınır?';
-    }
-    
     // Marker'ları temizle
     clearStoreMarkers();
     
@@ -1265,7 +1325,7 @@ function initWhereMap() {
                                 padding: [50, 50],
                                 animate: true,
                                 duration: 1.0,
-                                maxZoom: 10
+                                maxZoom: 12
                             });
                             
                             // Zoom sonrası bir kez daha invalidateSize
@@ -2028,7 +2088,7 @@ function setActiveProduct(productId) {
         if (bounds.length > 0) {
             whereMap.fitBounds(L.latLngBounds(bounds), { 
                 padding: [80, 80],
-                maxZoom: 12
+                maxZoom: 16
             });
         }
     }

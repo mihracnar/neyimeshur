@@ -1,3 +1,144 @@
+/* ===== YENİ SABİT BUTONLAR ===== */
+/* --- ORTAK AYARLAR --- */
+.play-button {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%) scale(1);
+    display: none; /* Varsayılan olarak gizli */
+    align-items: center;
+    justify-content: center;
+    
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px; /* 8px × 1.75 = 14px */
+    font-weight: 700;
+    
+    box-shadow: 0 5px 18px rgba(0,0,0,0.3); /* 3px × 1.75 ≈ 5px, 10px × 1.75 ≈ 18px */
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-decoration: none;
+    z-index: 998;
+    width: max-content;
+    cursor: pointer;
+}
+
+/* --- SAĞ BUTON (KIRMIZI - Nereden Alınır) --- */
+.play-button.right {
+    background: linear-gradient(135deg, #e00000, #b40000);
+    right: 9px; /* 5px × 1.75 ≈ 9px */
+    border-radius: 14px 53px 53px 14px; /* 8px × 1.75 = 14px, 30px × 1.75 ≈ 53px */
+    padding: 9px 32px 9px 18px; /* 5px × 1.75 ≈ 9px, 18px × 1.75 ≈ 32px, 10px × 1.75 ≈ 18px */
+}
+
+.play-button.right .text-container {
+    text-align: left;
+    margin-right: 7px; /* 4px × 1.75 = 7px */
+}
+
+/* Sağ buton hover: Parlak Kırmızı */
+.play-button.right:hover {
+    background: linear-gradient(135deg, #ff1a1a, #c90000);
+    padding-right: 40px; /* 23px × 1.75 ≈ 40px */
+    transform: translateY(-50%) translateX(-4px) scale(1.02); /* 2px × 1.75 ≈ 4px */
+    box-shadow: 0 9px 23px rgba(200,0,0,0.4); /* 5px × 1.75 ≈ 9px, 13px × 1.75 ≈ 23px */
+}
+
+/* --- SOL BUTON (GRİ - Ürünleri Keşfet) --- */
+.play-button.left {
+    background: linear-gradient(135deg, #5e5e5e, #3d3d3d);
+    left: 9px; /* 5px × 1.75 ≈ 9px */
+    border-radius: 53px 14px 14px 53px; /* 30px × 1.75 ≈ 53px, 8px × 1.75 = 14px */
+    padding: 9px 18px 9px 32px; /* 5px × 1.75 ≈ 9px, 10px × 1.75 ≈ 18px, 18px × 1.75 ≈ 32px */
+    flex-direction: row-reverse;
+}
+
+.play-button.left .text-container {
+    text-align: right;
+    margin-left: 7px; /* 4px × 1.75 = 7px */
+}
+
+/* Sol buton hover: Daha Açık Gri */
+.play-button.left:hover {
+    background: linear-gradient(135deg, #757575, #4f4f4f);
+    padding-left: 40px; /* 23px × 1.75 ≈ 40px */
+    transform: translateY(-50%) translateX(4px) scale(1.02); /* 2px × 1.75 ≈ 4px */
+    box-shadow: 0 9px 23px rgba(0,0,0,0.4); /* 5px × 1.75 ≈ 9px, 13px × 1.75 ≈ 23px */
+}
+
+/* --- İÇERİK METİNLERİ --- */
+.play-button .text-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.play-button .text-container span {
+    display: block;
+    line-height: 1.1;
+}
+
+.play-button .text-container span:first-child {
+    font-size: 0.9em; 
+    opacity: 0.95;
+    font-weight: 500;
+}
+
+.play-button .question-mark {
+    font-size: 21px; /* 12px × 1.75 = 21px */
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 2px; /* 1px × 1.75 ≈ 2px */
+}
+
+/* SOL BUTON: Sadece where-to-buy modunda görünür */
+body.where-to-buy-mode .play-button.left {
+    display: flex;
+}
+
+/* SAĞ BUTON: Sadece il seçildiğinde görünür (JavaScript ile kontrol) */
+.play-button.right.visible {
+    display: flex;
+}
+
+/* SAĞ BUTON: where-to-buy modunda GİZLİ */
+body.where-to-buy-mode .play-button.right {
+    display: none !important;
+}
+
+/* Responsive ayarlar */
+@media (max-width: 968px) {
+    .play-button {
+        font-size: 11px; /* 14px → 11px */
+        padding: 7px 24px 7px 14px !important;
+    }
+    
+    .play-button.left {
+        padding: 7px 14px 7px 24px !important;
+    }
+    
+    .play-button .question-mark {
+        font-size: 16px; /* 21px → 16px */
+    }
+    
+    .play-button.right:hover,
+    .play-button.left:hover {
+        transform: translateY(-50%) scale(1.02);
+        padding: 7px 24px 7px 14px !important;
+    }
+    
+    .play-button.left:hover {
+        padding: 7px 14px 7px 24px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .play-button {
+        font-size: 9px;
+    }
+    
+    .play-button .question-mark {
+        font-size: 13px;
+    }
+}
+
 * {
     margin: 0;
     padding: 0;
