@@ -942,51 +942,124 @@ function showProductDetail(productId) {
 
     const modalTitle = document.getElementById('modalTitle');
     const modalBadges = document.getElementById('modalBadges');
-    const modalBody = document.getElementById('modalBody');
+    const modalInfoBox = document.getElementById('modalInfoBox');
+    const modalActions = document.getElementById('modalActions');
+    const modalImage = document.getElementById('modalImage');
+    const modalImageContainer = document.getElementById('modalImageContainer');
+    const modalCityRibbon = document.getElementById('modalCityRibbon');
     
-    if (!modalTitle || !modalBadges || !modalBody) return;
+    if (!modalTitle) return;
 
+    // Başlık
     modalTitle.textContent = product.name;
+    
+    // Şehir ribbon
+    modalCityRibbon.textContent = `📍 ${product.city}`;
+    
+    // Görsel
+    if (product.imageUrl) {
+        modalImage.src = product.imageUrl;
+        modalImage.alt = product.name;
+        modalImage.onerror = function() {
+            modalImageContainer.classList.add('no-image');
+        };
+        modalImageContainer.classList.remove('no-image');
+        modalImageContainer.onclick = function(event) {
+            event.stopPropagation();
+            openLightbox(product.imageUrl, product.name, event);
+        };
+    } else {
+        modalImageContainer.classList.add('no-image');
+    }
+
+    // Badge'ler (chips)
     modalBadges.innerHTML = `
-        <div class="product-meta" style="margin-top: 15px;">
-            <span class="badge city">${product.city}</span>
-            <span class="badge type">${product.type}</span>
-            <span class="badge">${product.category}</span>
+        <span class="chip type">${product.type}</span>
+        <span class="chip">🍽️ ${product.category}</span>
+        <span class="chip status">✓ ${product.status}</span>
+    `;
+
+    // Bilgi kutusu
+    modalInfoBox.innerHTML = `
+        <div class="info-row">
+            <span class="info-label">Tescil No</span>
+            <span class="info-value">${product.registrationNo || '-'}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Dosya No</span>
+            <span class="info-value">${product.fileNo || '-'}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Tescil Tarihi</span>
+            <span class="info-value">${product.registrationDate || '-'}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Başvuru Sahibi</span>
+            <span class="info-value">${product.applicant || '-'}</span>
         </div>
     `;
 
-    modalBody.innerHTML = `
-        ${product.imageUrl ? `
-        <div class="modal-image-container">
-            <img src="${product.imageUrl}" alt="${product.name}" class="modal-image"
-                 onerror="this.parentElement.style.display='none'">
-        </div>
-        ` : ''}
-
-        <div class="info-grid">
-            <div class="info-item">
-                <div class="info-label">Tescil Tarihi</div>
-                <div class="info-value">${product.registrationDate || '-'}</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Durum</div>
-                <div class="info-value">${product.status || '-'}</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Başvuru Yapan</div>
-                <div class="info-value">${product.applicant || '-'}</div>
-            </div>
-        </div>
-        <div style="text-align: center;">
-            <a href="${product.link}" target="_blank" class="action-button">
-                🔗 Detaylı Bilgi Al
-            </a>
-        </div>
+    // Aksiyon butonları
+    modalActions.innerHTML = `
+        <button class="btn-icon" title="Favorilere Ekle" onclick="event.stopPropagation();">❤️</button>
+        <button class="btn-icon" title="Paylaş" onclick="shareProduct(${product.id}); event.stopPropagation();">📤</button>
+        <a href="${product.link}" target="_blank" class="btn-main" onclick="event.stopPropagation();">
+            Detayları Gör
+            <span>→</span>
+        </a>
     `;
 
     const modal = document.getElementById('productModal');
     if (modal) {
         modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+// Lightbox fonksiyonları
+function openLightbox(imgSrc, caption, event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxCaption = document.getElementById('lightbox-caption');
+    
+    if (lightbox && lightboxImg && lightboxCaption) {
+        lightboxImg.src = imgSrc;
+        lightboxCaption.textContent = caption;
+        lightbox.classList.add('active');
+    }
+}
+
+function closeLightbox(event) {
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    const lightbox = document.getElementById('lightbox');
+    if (lightbox) {
+        lightbox.classList.remove('active');
+    }
+}
+
+// Paylaşım fonksiyonu
+function shareProduct(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: product.name,
+            text: `${product.name} - ${product.city} - Neyi Meşhur?`,
+            url: product.link
+        });
+    } else {
+        // Fallback: Link'i kopyala
+        navigator.clipboard.writeText(product.link).then(() => {
+            alert('Link kopyalandı!');
+        });
     }
 }
 
@@ -994,76 +1067,135 @@ function closeModal() {
     const modal = document.getElementById('productModal');
     if (modal) {
         modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+function closeStoreModal() {
+    const modal = document.getElementById('storeModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
     }
 }
 
 // ✅ İSTEK 3: Store bilgilerini modal ile göster
 function showStoreDetail(store) {
-    const modalTitle = document.getElementById('modalTitle');
-    const modalBadges = document.getElementById('modalBadges');
-    const modalBody = document.getElementById('modalBody');
+    const storeModalTitle = document.getElementById('storeModalTitle');
+    const storeModalLocation = document.getElementById('storeModalLocation');
+    const storeModalBadges = document.getElementById('storeModalBadges');
+    const storeModalInfo = document.getElementById('storeModalInfo');
+    const storeModalProducts = document.getElementById('storeModalProducts');
+    const storeModalActions = document.getElementById('storeModalActions');
 
-    // Marker renk belirleme
-    const isProductCity = store.city === store.productCity;
-    const markerColor = isProductCity ? '#E30613' : '#28a745';
-    const locationText = isProductCity ? '🏠 Ürünün ana ilinde' : '🏪 Diğer ilden satış';
+    if (!storeModalTitle) return;
 
-    modalTitle.textContent = store.name;
+    // Başlık
+    storeModalTitle.textContent = store.name;
     
-    modalBadges.innerHTML = `
-        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
-            <span class="badge" style="background: ${markerColor}; color: white;">${store.type}</span>
-            <span class="badge city">${store.city} / ${store.district}</span>
-        </div>
+    // Konum ribbon
+    storeModalLocation.textContent = `📍 ${store.district}, ${store.city}`;
+
+    // Badge'ler (chips)
+    storeModalBadges.innerHTML = `
+        <span class="chip type">🛒 ${store.type}</span>
+        ${store.rating ? `<span class="chip rating">⭐ ${store.rating}</span>` : ''}
+        <span class="chip">🕐 ${store.workingHours || 'Bilgi yok'}</span>
     `;
 
-    modalBody.innerHTML = `
-        <div class="info-grid">
-            <div class="info-item">
+    // Bilgi kutusu
+    storeModalInfo.innerHTML = `
+        <div class="info-item">
+            <div class="info-icon">📍</div>
+            <div class="info-text">
                 <div class="info-label">Adres</div>
                 <div class="info-value">${store.address}</div>
             </div>
-            <div class="info-item">
+        </div>
+        <div class="info-item">
+            <div class="info-icon">📞</div>
+            <div class="info-text">
                 <div class="info-label">Telefon</div>
-                <div class="info-value"><a href="tel:${store.phone}" style="color: #E30613; text-decoration: none;">${store.phone}</a></div>
+                <div class="info-value"><a href="tel:${store.phone}">${store.phone}</a></div>
             </div>
-            <div class="info-item">
-                <div class="info-label">Çalışma Saatleri</div>
-                <div class="info-value">${store.workingHours}</div>
-            </div>
-            ${store.rating ? `
-            <div class="info-item">
+        </div>
+        ${store.rating ? `
+        <div class="info-item">
+            <div class="info-icon">⭐</div>
+            <div class="info-text">
                 <div class="info-label">Değerlendirme</div>
-                <div class="info-value">⭐ ${store.rating}/5.0</div>
+                <div class="info-value">${'★'.repeat(Math.floor(store.rating))}${'☆'.repeat(5 - Math.floor(store.rating))} ${store.rating} / 5</div>
             </div>
-            ` : ''}
-        </div>
-        
-        ${store.products && store.products.length > 0 ? `
-        <div class="detail-section">
-            <h3>Satılan Ürünler</h3>
-            <ul style="margin: 10px 0; padding-left: 20px; line-height: 1.8;">
-                ${store.products.map(p => `<li>${p}</li>`).join('')}
-            </ul>
-        </div>
-        ` : ''}
-        
-        <div style="background: ${markerColor}10; padding: 15px; border-radius: 10px; margin-top: 20px; text-align: center;">
-            <p style="color: ${markerColor}; font-weight: 600; margin: 0;">${locationText}</p>
-        </div>
-        
-        ${store.website ? `
-        <div style="text-align: center; margin-top: 20px;">
-            <a href="${store.website}" target="_blank" class="action-button">
-                🌐 Web Sitesini Ziyaret Et
-            </a>
         </div>
         ` : ''}
     `;
 
-    const modal = document.getElementById('productModal');
+    // Satılan ürünler - scrollable
+    if (store.products && store.products.length > 0) {
+        storeModalProducts.innerHTML = `
+            <div class="section-title">
+                Satılan Ürünler 
+                <span class="products-count">(${store.products.length} ürün)</span>
+            </div>
+            <div class="product-tags-scroll">
+                <div class="product-tags">
+                    ${store.products.map(p => `<span class="product-tag">${p}</span>`).join('')}
+                </div>
+            </div>
+        `;
+        storeModalProducts.style.display = 'block';
+        
+        // Scroll varsa fade efekti göster
+        setTimeout(() => {
+            const scrollContainer = storeModalProducts.querySelector('.product-tags-scroll');
+            if (scrollContainer && scrollContainer.scrollHeight > scrollContainer.clientHeight) {
+                storeModalProducts.classList.add('has-scroll');
+                
+                // Scroll event - en alta gelince fade'i kaldır
+                scrollContainer.addEventListener('scroll', () => {
+                    const isAtBottom = scrollContainer.scrollHeight - scrollContainer.scrollTop <= scrollContainer.clientHeight + 5;
+                    if (isAtBottom) {
+                        storeModalProducts.classList.remove('has-scroll');
+                    } else {
+                        storeModalProducts.classList.add('has-scroll');
+                    }
+                });
+            }
+        }, 50);
+    } else {
+        storeModalProducts.style.display = 'none';
+    }
+
+    // Aksiyon butonları
+    storeModalActions.innerHTML = `
+        <button class="btn-icon" title="Paylaş" onclick="shareStore('${store.name}', '${store.address}'); event.stopPropagation();">📤</button>
+        <button class="btn-icon call" title="Ara" onclick="window.location.href='tel:${store.phone}'; event.stopPropagation();">📞</button>
+        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address + ', ' + store.city)}" target="_blank" class="btn-main" onclick="event.stopPropagation();">
+            <span>🗺️</span>
+            Yol Tarifi Al
+        </a>
+    `;
+
+    const modal = document.getElementById('storeModal');
     if (modal) {
         modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+// Mağaza paylaşım fonksiyonu
+function shareStore(name, address) {
+    const text = `${name} - ${address}`;
+    if (navigator.share) {
+        navigator.share({
+            title: name,
+            text: text,
+            url: window.location.href
+        });
+    } else {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Adres kopyalandı!');
+        });
     }
 }
 
@@ -1076,11 +1208,33 @@ if (modal) {
     });
 }
 
+// Store modal için de overlay click listener
+const storeModalEl = document.getElementById('storeModal');
+if (storeModalEl) {
+    storeModalEl.addEventListener('click', (e) => {
+        if (e.target.id === 'storeModal') {
+            closeStoreModal();
+        }
+    });
+}
+
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-        const modal = document.getElementById('productModal');
-        if (modal && modal.classList.contains('active')) {
+        // Önce lightbox'ı kapat
+        const lightbox = document.getElementById('lightbox');
+        if (lightbox && lightbox.classList.contains('active')) {
+            closeLightbox();
+            return;
+        }
+        
+        // Sonra modalları kapat
+        const productModal = document.getElementById('productModal');
+        const storeModal = document.getElementById('storeModal');
+        
+        if (productModal && productModal.classList.contains('active')) {
             closeModal();
+        } else if (storeModal && storeModal.classList.contains('active')) {
+            closeStoreModal();
         } else if (whereToBuyMode) {
             exitWhereToBuyMode();
         } else if (isZoomedToCity) {

@@ -29,6 +29,9 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
+    <!-- Google Fonts - Playfair Display -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    
     <!-- Ana CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/map_enhancements.css">
@@ -188,15 +191,52 @@
         </div>
     </footer>
 
-    <!-- Modal -->
-    <div class="modal" id="productModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button class="close-btn" onclick="closeModal()">&times;</button>
-                <div class="modal-title" id="modalTitle"></div>
-                <div id="modalBadges"></div>
+    <!-- LIGHTBOX - BÜYÜK FOTOĞRAF -->
+    <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox(event)">
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <button class="lightbox-close" onclick="closeLightbox(event)">×</button>
+            <img id="lightbox-img" src="" alt="Büyük Görsel">
+            <div class="lightbox-caption" id="lightbox-caption"></div>
+        </div>
+        <div class="lightbox-hint">Kapatmak için herhangi bir yere tıklayın veya ESC tuşuna basın</div>
+    </div>
+
+    <!-- ÜRÜN MODAL - Modern Kart -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-card modal-product" id="productModalCard">
+            <div class="card-inner">
+                <button class="modal-close" onclick="event.stopPropagation(); closeModal();">×</button>
+                <div class="card-image" id="modalImageContainer">
+                    <div class="zoom-hint">🔍</div>
+                    <img id="modalImage" src="" alt="Ürün">
+                    <div class="city-ribbon" id="modalCityRibbon">📍 İl</div>
+                </div>
+                <div class="card-content">
+                    <h2 class="product-name" id="modalTitle"></h2>
+                    <div class="meta-chips" id="modalBadges"></div>
+                    <div class="info-box" id="modalInfoBox"></div>
+                    <div class="action-row" id="modalActions"></div>
+                </div>
             </div>
-            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- SATIŞ NOKTASI MODAL - Modern Kart -->
+    <div class="modal-overlay" id="storeModal">
+        <div class="modal-card modal-store">
+            <div class="card-inner">
+                <div class="card-header">
+                    <button class="modal-close" onclick="closeStoreModal()">×</button>
+                    <h2 class="store-name" id="storeModalTitle"></h2>
+                    <span class="location-ribbon" id="storeModalLocation">📍 Konum</span>
+                </div>
+                <div class="card-content">
+                    <div class="meta-chips" id="storeModalBadges"></div>
+                    <div class="info-box" id="storeModalInfo"></div>
+                    <div class="products-section" id="storeModalProducts"></div>
+                    <div class="action-row" id="storeModalActions"></div>
+                </div>
+            </div>
         </div>
     </div>
 
